@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-insert-test-data
+      author: dev
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column: { name: username, value: "testuser" }
+              - column: { name: password, value: "$2a$10$..." }
+              - column: { name: email, value: "test@example.com" }
+              - column: { name: full_name, value: "Test User" }
+              - column: { name: role, value: "ROLE_USER" }  # ← ИСПРАВЛЕНО!
