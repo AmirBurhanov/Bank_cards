@@ -46,9 +46,9 @@ docker-compose logs -f app
 docker-compose down
 
 👥 Тестовые пользователи
-Роль	Username	Password
-Пользователь (USER)	user	user123
-Администратор (ADMIN)	admin	admin123
+Роль	              Username	   Password
+Пользователь (USER)	     user	    user123
+Администратор (ADMIN)	admin	    admin123
 
 🔑 Эндпоинты API
 Аутентификация (доступно без токена)
