@@ -172,6 +172,8 @@ src/main/java/org/example/bank/
     ├── CardNumberGenerator.java   # Генерация номера карты
     ├── CardNumberMasker.java      # Маскирование номера (**** **** **** 1234)
     └── CardNumberEncryptor.java   # Шифрование/дешифрование номера (AES)
+
+
 🔄 Поток данных
 text
 [Клиент] → [Controller] → [Service] → [Repository] → [БД]
