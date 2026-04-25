@@ -1,4 +1,3 @@
-// SecurityConfig.java
 package org.example.bank.security;
 
 import org.example.bank.security.jwt.JwtAuthenticationFilter;
@@ -25,7 +24,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     @Lazy
-    private final CustomUserDetailsService userDetailsService;  // ← ИЗМЕНИТЬ!
+    private final CustomUserDetailsService userDetailsService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
@@ -36,7 +35,7 @@ public class SecurityConfig {
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService);  // ← ИЗМЕНИТЬ!
+        authProvider.setUserDetailsService(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }

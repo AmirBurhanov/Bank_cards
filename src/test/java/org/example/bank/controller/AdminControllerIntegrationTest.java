@@ -62,7 +62,6 @@ class AdminControllerIntegrationTest {
         cardRepository.deleteAll();
         userRepository.deleteAll();
 
-        // Create admin user
         User adminUser = User.builder()
                 .username("admin")
                 .password(passwordEncoder.encode("admin123"))
@@ -73,7 +72,6 @@ class AdminControllerIntegrationTest {
                 .build();
         userRepository.save(adminUser);
 
-        // Create regular user
         User regularUser = User.builder()
                 .username("user")
                 .password(passwordEncoder.encode("user123"))
@@ -114,14 +112,12 @@ class AdminControllerIntegrationTest {
 
     @Test
     void deleteUser_ShouldSoftDeleteUser_WhenAdmin() throws Exception {
-        // Get user ID
         User user = userRepository.findByUsername("user").orElseThrow();
 
         mockMvc.perform(delete("/api/admin/users/{userId}", user.getId())
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk());
 
-        // Verify user is deactivated
         User deletedUser = userRepository.findById(user.getId()).orElseThrow();
         assert !deletedUser.isActive();
     }

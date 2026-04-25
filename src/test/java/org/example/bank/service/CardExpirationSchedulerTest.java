@@ -42,7 +42,6 @@ class CardExpirationSchedulerTest {
                 .role(Role.ROLE_USER)
                 .build();
 
-        // Карта активна и не просрочена (срок действия через 2 года)
         activeCardNotExpired = Card.builder()
                 .id(1L)
                 .owner(testUser)
@@ -50,7 +49,6 @@ class CardExpirationSchedulerTest {
                 .expiryDate(LocalDate.now().plusYears(2))
                 .build();
 
-        // Карта активна, но просрочена (срок действия вчера)
         activeCardExpired = Card.builder()
                 .id(2L)
                 .owner(testUser)
@@ -58,7 +56,6 @@ class CardExpirationSchedulerTest {
                 .expiryDate(LocalDate.now().minusDays(1))
                 .build();
 
-        // Карта заблокирована и просрочена
         blockedCardExpired = Card.builder()
                 .id(3L)
                 .owner(testUser)
@@ -66,7 +63,6 @@ class CardExpirationSchedulerTest {
                 .expiryDate(LocalDate.now().minusMonths(1))
                 .build();
 
-        // Карта уже в статусе EXPIRED
         expiredCardAlreadyExpired = Card.builder()
                 .id(4L)
                 .owner(testUser)
@@ -77,7 +73,6 @@ class CardExpirationSchedulerTest {
 
     @Test
     void updateExpiredCards_ShouldUpdateOnlyActiveAndExpiredCards() {
-        // Given
         List<Card> allCards = List.of(
                 activeCardNotExpired,
                 activeCardExpired,
@@ -88,17 +83,13 @@ class CardExpirationSchedulerTest {
         when(cardRepository.findAll()).thenReturn(allCards);
         when(cardRepository.save(any(Card.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        // When
         cardExpirationScheduler.updateExpiredCards();
 
-        // Then
-        // Проверяем что только активная просроченная карта была обновлена
         assertThat(activeCardNotExpired.getStatus()).isEqualTo(CardStatus.ACTIVE);
         assertThat(activeCardExpired.getStatus()).isEqualTo(CardStatus.EXPIRED);
         assertThat(blockedCardExpired.getStatus()).isEqualTo(CardStatus.BLOCKED);
         assertThat(expiredCardAlreadyExpired.getStatus()).isEqualTo(CardStatus.EXPIRED);
 
-        // Verify save was called only once (for the expired active card)
         verify(cardRepository, times(1)).save(activeCardExpired);
         verify(cardRepository, never()).save(activeCardNotExpired);
         verify(cardRepository, never()).save(blockedCardExpired);
@@ -107,7 +98,6 @@ class CardExpirationSchedulerTest {
 
     @Test
     void updateExpiredCards_ShouldHandleMultipleExpiredCards() {
-        // Given
         Card expiredCard1 = Card.builder()
                 .id(5L)
                 .owner(testUser)
@@ -133,10 +123,8 @@ class CardExpirationSchedulerTest {
         when(cardRepository.findAll()).thenReturn(allCards);
         when(cardRepository.save(any(Card.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        // When
         cardExpirationScheduler.updateExpiredCards();
 
-        // Then
         assertThat(expiredCard1.getStatus()).isEqualTo(CardStatus.EXPIRED);
         assertThat(expiredCard2.getStatus()).isEqualTo(CardStatus.EXPIRED);
         assertThat(expiredCard3.getStatus()).isEqualTo(CardStatus.EXPIRED);
@@ -146,47 +134,38 @@ class CardExpirationSchedulerTest {
 
     @Test
     void updateExpiredCards_ShouldDoNothing_WhenNoExpiredCards() {
-        // Given
         List<Card> allCards = List.of(activeCardNotExpired);
         when(cardRepository.findAll()).thenReturn(allCards);
 
-        // When
         cardExpirationScheduler.updateExpiredCards();
 
-        // Then
         assertThat(activeCardNotExpired.getStatus()).isEqualTo(CardStatus.ACTIVE);
         verify(cardRepository, never()).save(any(Card.class));
     }
 
     @Test
     void updateExpiredCards_ShouldDoNothing_WhenNoCards() {
-        // Given
         when(cardRepository.findAll()).thenReturn(List.of());
 
-        // When
         cardExpirationScheduler.updateExpiredCards();
 
-        // Then
         verify(cardRepository, never()).save(any(Card.class));
     }
 
     @Test
     void updateExpiredCards_ShouldNotUpdateCardsExpiringToday() {
-        // Given
         Card cardExpiringToday = Card.builder()
                 .id(8L)
                 .owner(testUser)
                 .status(CardStatus.ACTIVE)
-                .expiryDate(LocalDate.now()) // Сегодня срок действия (еще не просрочена)
+                .expiryDate(LocalDate.now())
                 .build();
 
         List<Card> allCards = List.of(cardExpiringToday);
         when(cardRepository.findAll()).thenReturn(allCards);
 
-        // When
         cardExpirationScheduler.updateExpiredCards();
 
-        // Then
         assertThat(cardExpiringToday.getStatus()).isEqualTo(CardStatus.ACTIVE);
         verify(cardRepository, never()).save(any(Card.class));
     }

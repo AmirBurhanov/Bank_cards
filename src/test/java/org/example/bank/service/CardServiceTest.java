@@ -67,7 +67,6 @@ class CardServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Только создание объектов
         testUser = User.builder()
                 .id(1L)
                 .username("testuser")
@@ -106,7 +105,6 @@ class CardServiceTest {
     }
     @Test
     void createCard_ShouldCreateNewCard_WhenValidRequest() {
-        // Given
         setupSecurityContext();
         CardRequest request = new CardRequest();
         request.setInitialBalance(BigDecimal.valueOf(100));
@@ -116,10 +114,8 @@ class CardServiceTest {
         when(cardNumberMasker.mask(anyString())).thenReturn("**** **** **** 4444");
         when(cardRepository.save(any(Card.class))).thenReturn(testCard);
 
-        // When
         CardResponse response = cardService.createCard(request);
 
-        // Then
         assertThat(response).isNotNull();
         assertThat(response.getOwnerName()).isEqualTo("Test User");
         assertThat(response.getBalance()).isEqualTo(BigDecimal.valueOf(1000));
@@ -129,7 +125,6 @@ class CardServiceTest {
 
     @Test
     void createCard_ShouldCreateCardWithZeroBalance_WhenNoInitialBalance() {
-        // Given
         setupSecurityContext();
         CardRequest request = new CardRequest();
 
@@ -138,17 +133,14 @@ class CardServiceTest {
         when(cardNumberMasker.mask(anyString())).thenReturn("**** **** **** 4444");
         when(cardRepository.save(any(Card.class))).thenReturn(testCard);
 
-        // When
         CardResponse response = cardService.createCard(request);
 
-        // Then
         assertThat(response).isNotNull();
         verify(cardRepository, times(1)).save(any(Card.class));
     }
 
     @Test
     void getMyCards_ShouldReturnUserCards_WhenNoFilters() {
-        // Given
         setupSecurityContext();
         Pageable pageable = PageRequest.of(0, 10);
         Page<Card> cardPage = new PageImpl<>(List.of(testCard, testCard2));
@@ -156,10 +148,8 @@ class CardServiceTest {
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
         when(cardRepository.findByOwner(testUser, pageable)).thenReturn(cardPage);
 
-        // When
         Page<CardResponse> result = cardService.getMyCards(null, null, pageable);
 
-        // Then
         assertThat(result.getContent()).hasSize(2);
         assertThat(result.getContent().get(0).getMaskedNumber()).isEqualTo("**** **** **** 3456");
         verify(cardRepository, times(1)).findByOwner(testUser, pageable);
@@ -167,7 +157,6 @@ class CardServiceTest {
 
     @Test
     void getMyCards_ShouldReturnFilteredByStatus_WhenStatusProvided() {
-        // Given
         setupSecurityContext();
         Pageable pageable = PageRequest.of(0, 10);
         Page<Card> cardPage = new PageImpl<>(List.of(testCard));
@@ -176,10 +165,8 @@ class CardServiceTest {
         when(cardRepository.findByOwnerAndStatus(testUser, CardStatus.ACTIVE, pageable))
                 .thenReturn(cardPage);
 
-        // When
         Page<CardResponse> result = cardService.getMyCards(null, CardStatus.ACTIVE, pageable);
 
-        // Then
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).getStatus()).isEqualTo(CardStatus.ACTIVE);
         verify(cardRepository, times(1)).findByOwnerAndStatus(testUser, CardStatus.ACTIVE, pageable);
@@ -187,7 +174,6 @@ class CardServiceTest {
 
     @Test
     void getMyCards_ShouldReturnSearchResults_WhenSearchProvided() {
-        // Given
         setupSecurityContext();
         Pageable pageable = PageRequest.of(0, 10);
         Page<Card> cardPage = new PageImpl<>(List.of(testCard));
@@ -197,36 +183,29 @@ class CardServiceTest {
         when(cardRepository.searchByOwnerAndMaskedNumber(testUser, search, pageable))
                 .thenReturn(cardPage);
 
-        // When
         Page<CardResponse> result = cardService.getMyCards(search, null, pageable);
 
-        // Then
         assertThat(result.getContent()).hasSize(1);
         verify(cardRepository, times(1)).searchByOwnerAndMaskedNumber(testUser, search, pageable);
     }
 
     @Test
     void getBalance_ShouldReturnBalance_WhenCardOwnedByUser() {
-        // Given
         setupSecurityContext();
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
         when(cardRepository.findById(1L)).thenReturn(Optional.of(testCard));
 
-        // When
         BigDecimal balance = cardService.getBalance(1L);
 
-        // Then
         assertThat(balance).isEqualByComparingTo(BigDecimal.valueOf(1000));
     }
 
     @Test
     void getBalance_ShouldThrowException_WhenCardNotFound() {
-        // Given
         setupSecurityContext();
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
         when(cardRepository.findById(999L)).thenReturn(Optional.empty());
 
-        // When & Then
         assertThatThrownBy(() -> cardService.getBalance(999L))
                 .isInstanceOf(CardNotFoundException.class)
                 .hasMessageContaining("Card not found with id: 999");
@@ -234,7 +213,6 @@ class CardServiceTest {
 
     @Test
     void getBalance_ShouldThrowException_WhenCardNotOwnedByUser() {
-        // Given
         setupSecurityContext();
         User otherUser = User.builder().id(999L).username("other").build();
         Card otherCard = Card.builder().id(3L).owner(otherUser).build();
@@ -242,7 +220,6 @@ class CardServiceTest {
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
         when(cardRepository.findById(3L)).thenReturn(Optional.of(otherCard));
 
-        // When & Then
         assertThatThrownBy(() -> cardService.getBalance(3L))
                 .isInstanceOf(UnauthorizedAccessException.class)
                 .hasMessageContaining("You don't own this card");
@@ -250,28 +227,23 @@ class CardServiceTest {
 
     @Test
     void blockCard_ShouldBlockCard_WhenCardIsActive() {
-        // Given
         setupSecurityContext();
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
         when(cardRepository.findById(1L)).thenReturn(Optional.of(testCard));
 
-        // When
         cardService.blockCard(1L);
 
-        // Then
         assertThat(testCard.getStatus()).isEqualTo(CardStatus.BLOCKED);
         verify(cardRepository, times(1)).save(testCard);
     }
 
     @Test
     void blockCard_ShouldThrowException_WhenCardAlreadyBlocked() {
-        // Given
         setupSecurityContext();
         testCard.setStatus(CardStatus.BLOCKED);
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
         when(cardRepository.findById(1L)).thenReturn(Optional.of(testCard));
 
-        // When & Then
         assertThatThrownBy(() -> cardService.blockCard(1L))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Card is already blocked");
@@ -279,7 +251,6 @@ class CardServiceTest {
 
     @Test
     void transferBetweenCards_ShouldTransferAmount_WhenValid() {
-        // Given
         setupSecurityContext();
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
         when(cardRepository.findById(1L)).thenReturn(Optional.of(testCard));
@@ -287,10 +258,8 @@ class CardServiceTest {
 
         BigDecimal amount = BigDecimal.valueOf(200);
 
-        // When
         cardService.transferBetweenCards(1L, 2L, amount);
 
-        // Then
         assertThat(testCard.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(800));
         assertThat(testCard2.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(700));
         verify(cardRepository, times(1)).save(testCard);
@@ -299,7 +268,6 @@ class CardServiceTest {
 
     @Test
     void transferBetweenCards_ShouldThrowException_WhenInsufficientFunds() {
-        // Given
         setupSecurityContext();
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
         when(cardRepository.findById(1L)).thenReturn(Optional.of(testCard));
@@ -307,48 +275,36 @@ class CardServiceTest {
 
         BigDecimal amount = BigDecimal.valueOf(2000);
 
-        // When & Then
         assertThatThrownBy(() -> cardService.transferBetweenCards(1L, 2L, amount))
                 .isInstanceOf(InsufficientFundsException.class)
                 .hasMessageContaining("Insufficient funds");
     }
     @Test
     void transferBetweenCards_ShouldThrowException_WhenAmountIsZeroOrNegative() {
-        // Given
-       // setupSecurityContext();
         BigDecimal amount = BigDecimal.ZERO;
 
-        // When & Then - теперь НЕ НУЖЕН SecurityContext!
         assertThatThrownBy(() -> cardService.transferBetweenCards(1L, 2L, amount))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Transfer amount must be positive");
 
-        // Проверяем что репозитории не вызывались
         verify(userRepository, never()).findByUsername(anyString());
         verify(cardRepository, never()).findById(anyLong());
     }
 
     @Test
     void transferBetweenCards_ShouldThrowException_WhenTransferringToSameCard() {
-        // Given - НИКАКИХ МОКОВ НЕ НУЖНО!
-        // Не вызываем setupSecurityContext()
-        // Не мокаем userRepository
-        // Не мокаем cardRepository
         BigDecimal amount = BigDecimal.valueOf(100);
 
-        // When & Then
         assertThatThrownBy(() -> cardService.transferBetweenCards(1L, 1L, amount))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Cannot transfer to the same card");
 
-        // Проверяем, что репозитории НЕ вызывались
         verify(userRepository, never()).findByUsername(anyString());
         verify(cardRepository, never()).findById(anyLong());
     }
 
     @Test
     void transferBetweenCards_ShouldThrowException_WhenSourceCardIsBlocked() {
-        // Given
         setupSecurityContext();
         testCard.setStatus(CardStatus.BLOCKED);
 
@@ -358,7 +314,6 @@ class CardServiceTest {
 
         BigDecimal amount = BigDecimal.valueOf(100);
 
-        // When & Then
         assertThatThrownBy(() -> cardService.transferBetweenCards(1L, 2L, amount))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Source card is not active");
@@ -366,24 +321,20 @@ class CardServiceTest {
 
     @Test
     void activateCard_ShouldActivateCard_WhenCardIsBlocked() {
-        // Given
         setupSecurityContext();
         testCard.setStatus(CardStatus.BLOCKED);
 
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
         when(cardRepository.findById(1L)).thenReturn(Optional.of(testCard));
 
-        // When
         cardService.activateCard(1L);
 
-        // Then
         assertThat(testCard.getStatus()).isEqualTo(CardStatus.ACTIVE);
         verify(cardRepository, times(1)).save(testCard);
     }
 
     @Test
     void activateCard_ShouldThrowException_WhenCardIsExpired() {
-        // Given
         setupSecurityContext();
         testCard.setStatus(CardStatus.BLOCKED);
         testCard.setExpiryDate(LocalDate.now().minusDays(1));
@@ -391,7 +342,6 @@ class CardServiceTest {
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
         when(cardRepository.findById(1L)).thenReturn(Optional.of(testCard));
 
-        // When & Then
         assertThatThrownBy(() -> cardService.activateCard(1L))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Cannot activate expired card");

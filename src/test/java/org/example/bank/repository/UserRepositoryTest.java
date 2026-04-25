@@ -34,9 +34,7 @@ class UserRepositoryTest {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
-        // Отключаем Liquibase для тестов
         registry.add("spring.liquibase.enabled", () -> false);
-        // Отключаем автоматическое создание схемы
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
     }
 

@@ -26,17 +26,14 @@ public class AuthService {
 
     @Transactional
     public User register(RegisterRequest request) {
-        // Check if username already exists
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new UsernameAlreadyExistsException("Username already taken");  // ← ИСПРАВЛЕНО
+            throw new UsernameAlreadyExistsException("Username already taken");
         }
 
-        // Check if email already exists
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new EmailAlreadyRegisteredException("Email already registered");  // ← ИСПРАВЛЕНО
+            throw new EmailAlreadyRegisteredException("Email already registered");
         }
 
-        // Create new user
         User user = User.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))

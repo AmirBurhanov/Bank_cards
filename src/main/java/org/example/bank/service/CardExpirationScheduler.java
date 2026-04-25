@@ -21,7 +21,7 @@ public class CardExpirationScheduler {
 
     private final CardRepository cardRepository;
 
-    @Scheduled(cron = "0 0 0 * * *") // Каждый день в полночь
+    @Scheduled(cron = "0 0 0 * * *")
     @Transactional
     public void updateExpiredCards() {
         List<Card> activeCards = cardRepository.findAll().stream()

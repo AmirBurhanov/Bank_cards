@@ -10,7 +10,6 @@ public class CardNumberMasker {
             return "**** **** **** ****";
         }
 
-        // Берем последние 4 цифры
         String last4 = cardNumber.substring(cardNumber.length() - 4);
         return "**** **** **** " + last4;
     }

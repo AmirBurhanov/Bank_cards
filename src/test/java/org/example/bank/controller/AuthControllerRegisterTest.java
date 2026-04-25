@@ -76,7 +76,6 @@ class AuthControllerRegisterTest {
                 .andExpect(jsonPath("$.role").value("ROLE_USER"))
                 .andExpect(jsonPath("$.active").value(true));
 
-        // Verify user was saved to database
         User savedUser = userRepository.findByUsername("john_doe").orElse(null);
         assertThat(savedUser).isNotNull();
         assertThat(savedUser.getEmail()).isEqualTo("john@example.com");
@@ -127,7 +126,6 @@ class AuthControllerRegisterTest {
 
     @Test
     void register_ShouldReturnBadRequest_WhenUsernameAlreadyExists() throws Exception {
-        // Create existing user
         User existingUser = User.builder()
                 .username("existing_user")
                 .password(passwordEncoder.encode("pass"))
@@ -147,13 +145,12 @@ class AuthControllerRegisterTest {
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isInternalServerError())  // ← 500, а не 409
+                .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.message").value("Username already taken"));
     }
 
     @Test
     void register_ShouldReturnBadRequest_WhenEmailAlreadyExists() throws Exception {
-        // Create existing user
         User existingUser = User.builder()
                 .username("existing_user")
                 .password(passwordEncoder.encode("pass"))
@@ -173,7 +170,7 @@ class AuthControllerRegisterTest {
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isInternalServerError())  // ← 500, а не 409
+                .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.message").value("Email already registered"));
     }
 
@@ -192,9 +189,7 @@ class AuthControllerRegisterTest {
 
         User savedUser = userRepository.findByUsername("secure_user").orElseThrow();
 
-        // Password should be encrypted (not equal to original)
         assertThat(savedUser.getPassword()).isNotEqualTo("mySecretPassword123!");
-        // But should match the original
         assertThat(passwordEncoder.matches("mySecretPassword123!", savedUser.getPassword())).isTrue();
     }
 }

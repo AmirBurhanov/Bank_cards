@@ -1,4 +1,3 @@
-// CustomUserDetailsService.java
 package org.example.bank.security;
 
 import org.example.bank.repository.UserRepository;

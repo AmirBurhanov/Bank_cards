@@ -49,7 +49,6 @@ class CardControllerIntegrationTest {
 
         registry.add("spring.liquibase.enabled", () -> true);
         registry.add("spring.liquibase.drop-first", () -> true);
-        // Используем основной файл (у вас же есть все три файла в v1!)
         registry.add("spring.liquibase.change-log", () -> "classpath:db/changelog/db.changelog-master.yaml");
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "none");
     }
@@ -80,11 +79,9 @@ class CardControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // Очищаем БД
         cardRepository.deleteAll();
         userRepository.deleteAll();
 
-        // Create regular user
         testUser = User.builder()
                 .username("testuser")
                 .password(passwordEncoder.encode("password123"))
@@ -95,7 +92,6 @@ class CardControllerIntegrationTest {
                 .build();
         userRepository.save(testUser);
 
-        // Create admin user
         adminUser = User.builder()
                 .username("admin")
                 .password(passwordEncoder.encode("admin123"))
@@ -106,7 +102,6 @@ class CardControllerIntegrationTest {
                 .build();
         userRepository.save(adminUser);
 
-        // Create test card
         testCard = Card.builder()
                 .encryptedCardNumber("1111222233334444")
                 .maskedNumber("**** **** **** 4444")
@@ -117,7 +112,6 @@ class CardControllerIntegrationTest {
                 .build();
         cardRepository.save(testCard);
 
-        // Generate tokens
         userToken = jwtTokenProvider.generateTokenFromUsername("testuser");
         adminToken = jwtTokenProvider.generateTokenFromUsername("admin");
     }
@@ -149,7 +143,6 @@ class CardControllerIntegrationTest {
 
     @Test
     void getMyCards_ShouldFilterByStatus_WhenStatusProvided() throws Exception {
-        // Create blocked card
         Card blockedCard = Card.builder()
                 .encryptedCardNumber("5555666677778888")
                 .maskedNumber("**** **** **** 8888")
@@ -190,14 +183,12 @@ class CardControllerIntegrationTest {
                         .header("Authorization", "Bearer " + userToken))
                 .andExpect(status().isOk());
 
-        // Verify card is blocked
         Card blockedCard = cardRepository.findById(testCard.getId()).orElseThrow();
         assert blockedCard.getStatus() == CardStatus.BLOCKED;
     }
 
     @Test
     void blockCard_ShouldReturnForbidden_WhenCardNotOwnedByUser() throws Exception {
-        // Create another user and their card
         User otherUser = User.builder()
                 .username("otheruser")
                 .password(passwordEncoder.encode("password"))
@@ -225,7 +216,6 @@ class CardControllerIntegrationTest {
 
     @Test
     void transfer_ShouldTransferAmount_WhenValidRequest() throws Exception {
-        // Create second card for user
         Card secondCard = Card.builder()
                 .encryptedCardNumber("5555666677778888")
                 .maskedNumber("**** **** **** 8888")
@@ -250,7 +240,6 @@ class CardControllerIntegrationTest {
 
     @Test
     void transfer_ShouldReturnBadRequest_WhenInsufficientFunds() throws Exception {
-        // Create second card
         Card secondCard = Card.builder()
                 .encryptedCardNumber("5555666677778888")
                 .maskedNumber("**** **** **** 8888")
@@ -264,7 +253,7 @@ class CardControllerIntegrationTest {
         TransferRequest request = new TransferRequest();
         request.setFromCardId(testCard.getId());
         request.setToCardId(secondCard.getId());
-        request.setAmount(BigDecimal.valueOf(2000)); // More than balance
+        request.setAmount(BigDecimal.valueOf(2000));
 
         mockMvc.perform(post("/api/cards/transfer")
                         .header("Authorization", "Bearer " + userToken)
@@ -283,6 +272,6 @@ class CardControllerIntegrationTest {
         mockMvc.perform(post("/api/cards/transfer")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isForbidden());  // ← изменить с isUnauthorized на isForbidden
+                .andExpect(status().isForbidden());
     }
 }

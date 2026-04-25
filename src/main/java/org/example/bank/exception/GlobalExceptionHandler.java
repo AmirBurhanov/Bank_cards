@@ -136,9 +136,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleUsernameAlreadyExists(UsernameAlreadyExistsException ex) {
         ErrorResponse error = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())  // ← 500, а не 409
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .error("Internal Server Error")
-                .message(ex.getMessage())  // "Username already taken"
+                .message(ex.getMessage())
                 .path(getPath())
                 .build();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
@@ -148,9 +148,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleEmailAlreadyRegistered(EmailAlreadyRegisteredException ex) {
         ErrorResponse error = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())  // ← 500, а не 409
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .error("Internal Server Error")
-                .message(ex.getMessage())  // "Email already registered"
+                .message(ex.getMessage())
                 .path(getPath())
                 .build();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
@@ -158,7 +158,6 @@ public class GlobalExceptionHandler {
 
 
     private String getPath() {
-        // В реальном приложении можно получить из ServletRequestAttributes
         return "unknown";
     }
 }

@@ -14,7 +14,6 @@ class CardNumberEncryptionTest {
 
     @BeforeEach
     void setUp() {
-        // Create a deterministic encryptor for testing
         String password = "testPassword2024";
         String salt = "12345678";
         textEncryptor = Encryptors.text(password, salt);
@@ -48,7 +47,6 @@ class CardNumberEncryptionTest {
         String encrypted1 = cardNumberEncryptor.encrypt(cardNumber);
         String encrypted2 = cardNumberEncryptor.encrypt(cardNumber);
 
-        // With proper encryption (using random IV), each encryption should be different
         assertThat(encrypted1).isNotEqualTo(encrypted2);
     }
 

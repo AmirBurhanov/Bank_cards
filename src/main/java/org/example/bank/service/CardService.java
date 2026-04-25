@@ -37,7 +37,6 @@ public class CardService {
     public CardResponse createCard(CardRequest request) {
         User currentUser = getCurrentUser();
 
-        // Генерируем номер карты
         String encryptedCardNumber = cardNumberGenerator.generateEncryptedNumber();
         String maskedNumber = cardNumberMasker.mask(encryptedCardNumber);
 
@@ -127,7 +126,6 @@ public class CardService {
 
     @Transactional
     public void transferBetweenCards(Long fromCardId, Long toCardId, BigDecimal amount) {
-        // ===== БЫСТРЫЕ ПРОВЕРКИ (без БД и SecurityContext) =====
         if (amount == null) {
             throw new IllegalArgumentException("Transfer amount cannot be null");
         }
@@ -143,14 +141,11 @@ public class CardService {
             throw new IllegalArgumentException("Cannot transfer to the same card");
         }
 
-        // ===== ТЕПЕРЬ ПОЛУЧАЕМ ПОЛЬЗОВАТЕЛЯ =====
         User currentUser = getCurrentUser();
 
-        // ===== РАБОТА С БД =====
         Card fromCard = getCardAndValidateOwner(fromCardId, currentUser);
         Card toCard = getCardAndValidateOwner(toCardId, currentUser);
 
-        // ===== БИЗНЕС-ПРОВЕРКИ =====
         if (fromCard.getStatus() != CardStatus.ACTIVE) {
             throw new IllegalStateException("Source card is not active. Status: " + fromCard.getStatus());
         }
@@ -170,7 +165,6 @@ public class CardService {
             );
         }
 
-        // ===== ВЫПОЛНЯЕМ ПЕРЕВОД =====
         fromCard.setBalance(fromCard.getBalance().subtract(amount));
         toCard.setBalance(toCard.getBalance().add(amount));
 

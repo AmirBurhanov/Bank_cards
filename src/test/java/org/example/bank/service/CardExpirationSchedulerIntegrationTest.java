@@ -71,7 +71,6 @@ class CardExpirationSchedulerIntegrationTest {
 
     @Test
     void updateExpiredCards_ShouldUpdateExpiredCardsInDatabase() {
-        // Given
         Card activeNotExpired = Card.builder()
                 .encryptedCardNumber("encrypted123")
                 .maskedNumber("**** **** **** 1111")
@@ -98,10 +97,8 @@ class CardExpirationSchedulerIntegrationTest {
 
         cardRepository.saveAll(List.of(activeNotExpired, activeExpired, blockedExpired));
 
-        // When
         cardExpirationScheduler.updateExpiredCards();
 
-        // Then
         Card updatedActiveExpired = cardRepository.findById(activeExpired.getId()).orElseThrow();
         Card updatedBlockedExpired = cardRepository.findById(blockedExpired.getId()).orElseThrow();
         Card updatedActiveNotExpired = cardRepository.findById(activeNotExpired.getId()).orElseThrow();
@@ -113,7 +110,6 @@ class CardExpirationSchedulerIntegrationTest {
 
     @Test
     void updateExpiredCards_ShouldHandleMultipleExpiredCardsInDatabase() {
-        // Given
         Card expiredCard1 = Card.builder()
                 .encryptedCardNumber("encrypted111")
                 .maskedNumber("**** **** **** 1111")
@@ -140,10 +136,8 @@ class CardExpirationSchedulerIntegrationTest {
 
         cardRepository.saveAll(List.of(expiredCard1, expiredCard2, notExpiredCard));
 
-        // When
         cardExpirationScheduler.updateExpiredCards();
 
-        // Then
         List<Card> allCards = cardRepository.findAll();
         long expiredCount = allCards.stream()
                 .filter(card -> card.getStatus() == CardStatus.EXPIRED)
@@ -155,7 +149,6 @@ class CardExpirationSchedulerIntegrationTest {
 
     @Test
     void updateExpiredCards_ShouldBeIdempotent() {
-        // Given
         Card activeExpired = Card.builder()
                 .encryptedCardNumber("encrypted456")
                 .maskedNumber("**** **** **** 2222")
@@ -166,15 +159,12 @@ class CardExpirationSchedulerIntegrationTest {
 
         cardRepository.save(activeExpired);
 
-        // When
         cardExpirationScheduler.updateExpiredCards();
         cardExpirationScheduler.updateExpiredCards();
 
-        // Then
         Card updatedCard = cardRepository.findById(activeExpired.getId()).orElseThrow();
         assertThat(updatedCard.getStatus()).isEqualTo(CardStatus.EXPIRED);
 
-        // Проверяем что статус не менялся повторно
         assertThat(updatedCard.getStatus()).isEqualTo(CardStatus.EXPIRED);
     }
 }

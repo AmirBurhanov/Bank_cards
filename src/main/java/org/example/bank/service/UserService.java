@@ -1,4 +1,3 @@
-// UserService.java - УБИРАЕМ implements UserDetailsService
 package org.example.bank.service;
 
 import org.example.bank.entity.User;
@@ -14,12 +13,10 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class UserService {  // ❌ УБРАТЬ "implements UserDetailsService"
+public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-
-    // ❌ УБРАТЬ метод loadUserByUsername - он теперь в CustomUserDetailsService
 
     public User findById(Long id) {
         return userRepository.findById(id)
