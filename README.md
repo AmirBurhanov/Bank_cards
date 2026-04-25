@@ -23,8 +23,6 @@
 
 ---
 
-## 🚀 Быстрый старт
-
 ### Требования
 
 - Docker & Docker Compose
@@ -92,19 +90,19 @@ bash
 
 # С отчетом о покрытии
 ./mvnw test jacoco:report
-🛠 Технологии
-Технология	Версия	Назначение
-Java	17	Язык программирования
-Spring Boot	3.2.5	Фреймворк
-Spring Security	-	Аутентификация и авторизация
-JWT	0.11.5	Токены доступа
-Spring Data JPA	-	Работа с БД
-PostgreSQL	15	База данных
-Liquibase	-	Миграции БД
-Docker	-	Контейнеризация
-Swagger/OpenAPI	2.5.0	Документация API
-JUnit 5	-	Тестирование
-Testcontainers	1.19.7	Интеграционные тесты
+
+📦 Технологический стек
+Компонент	Технология	Назначение
+Фреймворк	Spring Boot 3.2.5	Основа приложения
+Безопасность	Spring Security + JWT	Аутентификация и авторизация
+База данных	PostgreSQL 15	Хранение данных
+ORM	Spring Data JPA / Hibernate	Работа с БД
+Миграции	Liquibase	Управление схемой БД
+Документация	Swagger / OpenAPI 2.5.0	Документирование API
+Шифрование	Spring Security Crypto (AES)	Шифрование номеров карт
+Тестирование	JUnit 5, Mockito, Testcontainers	Модульное и интеграционное тестирование
+Контейнеризация	Docker / Docker Compose	Развертывание и окружение
+Сборка	Maven	Управление зависимостями
 
 🔒 Безопасность
 Механизм	Описание
@@ -114,24 +112,99 @@ Testcontainers	1.19.7	Интеграционные тесты
 JWT токены	Срок действия: 24 часа
 Ролевая модель	USER и ADMIN с разными правами
 
+📁 Архитектура проекта
+Проект построен на многослойной (трехуровневой) архитектуре с четким разделением ответственности.
 
-📁 Структура проекта
 text
-src/
-├── main/java/org/example/bank/
-│   ├── controller/      # REST контроллеры (Swagger аннотации)
-│   ├── service/         # Бизнес-логика
-│   ├── repository/      # JPA репозитории
-│   ├── entity/          # Сущности БД
-│   ├── dto/             # DTO для запросов/ответов
-│   ├── security/        # Spring Security + JWT
-│   ├── exception/       # Глобальный обработчик ошибок
-│   ├── config/          # Конфигурации (OpenAPI, Crypto)
-│   └── utils/           # Утилиты (шифрование, маскирование)
-├── main/resources/
-│   └── db/changelog/    # Liquibase миграции
-└── test/                # Unit и интеграционные тесты
+src/main/java/org/example/bank/
+│
+├── controller/          # Web / REST слой
+│   ├── AuthController.java      # Аутентификация (login, register)
+│   ├── CardController.java      # Операции с картами для USER
+│   └── AdminController.java     # Администрирование для ADMIN
+│
+├── service/             # Бизнес-логика (сервисный слой)
+│   ├── AuthService.java         # Регистрация и аутентификация
+│   ├── CardService.java         # CRUD карт, блокировка, переводы
+│   ├── UserService.java         # Управление пользователями
+│   └── CardExpirationScheduler.java  # Автоматическое обновление статуса EXPIRED
+│
+├── repository/          # Data Access Layer (DAO)
+│   ├── UserRepository.java      # JPA репозиторий для пользователей
+│   └── CardRepository.java      # JPA репозиторий для карт
+│
+├── entity/              # JPA сущности (таблицы БД)
+│   ├── User.java                # Пользователь (username, password, role)
+│   ├── Card.java                # Карта (номер, баланс, статус, срок действия)
+│   └── enums/                   # Перечисления
+│       ├── Role.java            # ROLE_USER, ROLE_ADMIN
+│       └── CardStatus.java      # ACTIVE, BLOCKED, EXPIRED
+│
+├── dto/                 # Data Transfer Objects (для API)
+│   ├── request/                 # Входящие DTO
+│   │   ├── AuthRequest.java     # Логин (username + password)
+│   │   ├── RegisterRequest.java # Регистрация
+│   │   ├── CardRequest.java     # Создание карты
+│   │   └── TransferRequest.java # Перевод (fromCardId, toCardId, amount)
+│   └── response/                # Исходящие DTO
+│       ├── AuthResponse.java    # JWT токен
+│       ├── CardResponse.java    # Данные карты (маскированный номер, баланс)
+│       └── ErrorResponse.java   # Стандартизированная ошибка
+│
+├── security/            # Безопасность и JWT
+│   ├── jwt/
+│   │   ├── JwtTokenProvider.java      # Генерация и валидация JWT
+│   │   └── JwtAuthenticationFilter.java # Перехват запросов, проверка токена
+│   ├── CustomUserDetailsService.java   # Загрузка пользователя из БД
+│   └── SecurityConfig.java             # Настройки Spring Security
+│
+├── config/              # Конфигурации приложения
+│   ├── CryptoConfig.java        # Настройки шифрования (AES)
+│   └── OpenApiConfig.java       # Swagger / OpenAPI документация
+│
+├── exception/           # Обработка ошибок
+│   ├── GlobalExceptionHandler.java    # Глобальный перехват исключений
+│   ├── CardNotFoundException.java     # Карта не найдена (404)
+│   ├── InsufficientFundsException.java # Недостаточно средств (400)
+│   └── UnauthorizedAccessException.java # Нет прав (403)
+│
+└── utils/               # Утилиты и вспомогательные классы
+    ├── CardNumberGenerator.java   # Генерация номера карты
+    ├── CardNumberMasker.java      # Маскирование номера (**** **** **** 1234)
+    └── CardNumberEncryptor.java   # Шифрование/дешифрование номера (AES)
+🔄 Поток данных
+text
+[Клиент] → [Controller] → [Service] → [Repository] → [БД]
+   ↑           ↓              ↓             ↓
+   │         [DTO]        [Entity]      [Entity]
+   │           ↓                          
+   └───── [HTTP Response] ←────────────────┘
+   
+Описание слоев:
+Слой	Назначение	Взаимодействие
+Controller	Принимает HTTP запросы, валидирует входные DTO, вызывает сервисы	Не содержит бизнес-логики
+Service	Содержит бизнес-логику (проверка баланса, переводы, блокировка)	Транзакции (@Transactional)
+Repository	Интерфейсы для работы с БД (Spring Data JPA)	Запросы к PostgreSQL
+Entity	Маппинг Java объектов на таблицы БД	Содержит JPA аннотации
+DTO	Объекты для обмена между API и клиентом	Сквозная валидация (@Valid)
+Security	Проверка JWT токенов, ролевой доступ	Фильтры перед контроллерами
 
+📁 Структура тестов
+text
+src/test/java/org/example/bank/
+├── controller/           # Интеграционные тесты REST API
+│   ├── AuthControllerRegisterTest.java
+│   ├── CardControllerIntegrationTest.java
+│   └── AdminControllerIntegrationTest.java
+├── service/              # Юнит-тесты бизнес-логики
+│   ├── CardServiceTest.java
+│   ├── CardExpirationSchedulerTest.java
+│   └── CardExpirationSchedulerIntegrationTest.java
+├── repository/           # Тесты репозиториев (с Testcontainers)
+│   ├── UserRepositoryTest.java
+│   └── CardRepositoryTest.java
+└── utils/                # Тесты утилит
+    └── CardNumberEncryptionTest.java
 
 🔄 Автоматические задачи
 Задача	Расписание	Описание
